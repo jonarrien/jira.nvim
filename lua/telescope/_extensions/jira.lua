@@ -35,11 +35,12 @@ local priority_highlight = {
 }
 
 local type_highlight = {
-  Bug     = 'Error',
-  Story   = 'DevIconLiquid',
-  Feature = 'DevIconErl',
-  Support = 'DevIconMl',
-  Task    = 'DevIconCss',
+  Bug          = 'DevIconHrl', --  'DevIconErl',
+  Story        = 'DevIconLiquid',
+  Feature      = 'DevIconBmp',
+  Support      = 'DevIconMl',
+  Task         = 'DevIconCss',
+  ["Sub-task"] = 'DevIconAac',
 }
 
 local make_display = function(entry)

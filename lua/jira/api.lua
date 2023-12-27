@@ -103,9 +103,9 @@ M.sprints = function(opts)
 
   cmd = table.concat({
     cmd,
-    "--columns ", opts.columns or "key,priority,type,summary",
-    "--order-by ", opts.order or "priority",
-    "--paginate ", opts.paginate or 100,
+    "--columns ", opts.columns or defaults.columns,
+    "--order-by ", opts.order or defaults.order,
+    "--paginate ", opts.paginate or defaults.paginate,
     opts.args or ''
   }, " ")
 
