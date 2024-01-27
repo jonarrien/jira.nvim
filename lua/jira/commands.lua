@@ -81,6 +81,22 @@ vim.api.nvim_create_user_command("JiraIssueList", function()
   })
 end, {})
 
+vim.api.nvim_create_user_command("JiraWorkedToday", function()
+  api.list_issues({
+    query = "updated > startOfDay()",
+    types = { "~Epic" }, 
+    args = "--reverse -a $(jira me)"
+  })
+end, {})
+
+vim.api.nvim_create_user_command("JiraWorkedThisWeek", function()
+  api.list_issues({
+    query = "updated >= startOfWeek()",
+    types = { "~Epic" }, 
+    args = "--reverse -a $(jira me)"
+  })
+end, {})
+
 -- What ticket did I opened recently?
 vim.api.nvim_create_user_command("JiraRecents", function()
   api.list_issues({ args = '--history' })
