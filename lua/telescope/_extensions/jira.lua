@@ -11,6 +11,7 @@ local finders = require("telescope.finders")
 local sorter = require("telescope.sorters")
 local entry_display = require("telescope.pickers.entry_display")
 
+local config = require("jira.config")
 local api = require('jira.api')
 local fn = require('jira.fn')
 
@@ -22,44 +23,32 @@ local displayer = entry_display.create({
     { width = 9 },
     { width = 10 },
     { width = 10 },
+    { width = 15 },
     { remaining = true },
+    { width = 30 },
   },
 })
 
-local priority_highlight = {
-  Highest = 'DevIconHtm',
-  High    = 'DevIconMl',
-  Medium  = 'DevIconPp',
-  Low     = 'DevIconDefault',
-  Lowest  = 'DevIconDsStore',
-}
-
-local type_highlight = {
-  Bug          = 'DevIconHrl', --  'DevIconErl',
-  Story        = 'DevIconLiquid',
-  Feature      = 'DevIconBmp',
-  Support      = 'DevIconMl',
-  Task         = 'DevIconCss',
-  ["Sub-task"] = 'DevIconAac',
-}
-
 local make_display = function(entry)
-  local id_hl = priority_highlight[entry.priority] or 'Error'
-  local type_hl = type_highlight[entry.type] or 'Error'
+  local priority_hl = config.highlights.priority[entry.priority] or 'Error'
+  local type_hl = config.highlights.type[entry.type] or 'Error'
+  local status_hl = config.highlights.status[entry.status] or 'Error'
+
   return displayer({
-    { entry.id,          "DevIconEx" },
-    { entry.priority,    id_hl },
-    { entry.type,        type_hl },
-    { entry.description, 'Comment' },
+    { entry.id,       "Function" },
+    { entry.priority, priority_hl },
+    { entry.type,     type_hl },
+    { entry.status,   status_hl },
+    { entry.summary },
+    { entry.labels,   "Comment" },
   })
 end
 
 local autocomplete = function(text)
   if cache ~= nil then return cache end
-  cache = api.sprints({
+  cache = api.plain('sprint list', {
     statuses = { "~Done", "~Cancelled" },
     types = { "~Epic" },
-    plain = true,
     args = "--current -a$(jira me)"
   })
   return cache
@@ -71,7 +60,7 @@ local make_finder = function(config)
     entry_maker = function(entry)
       entry.id = entry.key
       entry.value = entry.key
-      entry.ordinal = entry.key .. " " .. entry.description
+      entry.ordinal = entry.key .. " " .. entry.summary .. " " .. entry.labels
       entry.display = make_display
       return entry
     end,
@@ -85,7 +74,7 @@ local make_picker = function(opts)
     finder = make_finder(),
     sorter = sorter.get_fzy_sorter(opts),
     attach_mappings = function(_, map)
-      map("i", '<CR>', fn.set_current_ticket)
+      map("i", '<CR>', fn.picker)
       map("i", '<C-e>', fn.edit)
       map("i", '<C-v>', fn.view)
       return true
@@ -93,12 +82,10 @@ local make_picker = function(opts)
   })
 end
 
-local current_sprint = function(opts)
-  make_picker(opts):find()
-end
-
 return telescope.register_extension({
   exports = {
-    jira = current_sprint,
+    jira = function(opts)
+      make_picker(opts):find()
+    end
   }
 })

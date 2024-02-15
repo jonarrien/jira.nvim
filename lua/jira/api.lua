@@ -1,4 +1,4 @@
-local run = require('jira.run')
+local run = require('jira.run').interactive
 
 local defaults = {
   columns = "key,type,summary,priority,status,assignee,reporter,sprint,duedate,labels,description",
@@ -7,22 +7,60 @@ local defaults = {
   issue_types = { 'Epic', 'Story', 'Task', 'Bug', 'Support' },
 }
 
+local plain = {
+  columns = "key,priority,type,summary,labels,status"
+}
+
 local parse_results = function(output)
   local results = {}
+
   for line in output:gmatch("[^\r\n]+") do
-    local key, priority, kind, subject = line:match(
-      "(%S+)%s+(%S+)%s+(%S+)%s+(.+)"
+    local key, priority, type, summary, labels, status = line:match(
+      "(%S+)\t+(%S+)\t+(%S+)\t+(.*)\t+(%S+)\t+(.*)"
     )
     if key and key ~= nil and key ~= "KEY" then
       table.insert(results, {
         key = key,
-        type = kind,
+        type = type,
         priority = priority,
-        description = subject,
+        summary = summary,
+        labels = labels,
+        status = status,
       })
     end
   end
   return results
+end
+
+-- Generates Jira CLI command arguments
+-- @param cmd string `issue list` or `sprint list`
+-- @param opts table
+local cli_arguments = function(cmd, opts)
+  if opts.types then
+    for _, t in ipairs(opts.types) do
+      cmd = cmd .. " -t" .. t .. " "
+    end
+  end
+
+  if opts.statuses then
+    for _, status in ipairs(opts.statuses) do
+      cmd = cmd .. ' -s"' .. status .. '" '
+    end
+  end
+
+  if opts.query then
+    cmd = cmd .. ' -q"' .. opts.query .. '" '
+  end
+
+  if opts.plain then cmd = cmd .. " --plain" end
+
+  return string.format("%s --columns %s --order-by %s --paginate %s %s",
+    cmd,
+    opts.columns or defaults.columns,
+    opts.order or defaults.order,
+    opts.paginate or defaults.paginate,
+    opts.args or ''
+  )
 end
 
 local M = {}
@@ -48,27 +86,7 @@ M.view = function(issue)
 end
 
 M.list_issues = function(opts)
-  local cmd = "issue list "
-
-  if opts.types then
-    for _, t in ipairs(opts.types) do cmd = cmd .. "-t" .. t .. " " end
-  end
-
-  if opts.statuses then
-    for _, status in ipairs(opts.statuses) do cmd = cmd .. '-s"' .. status .. '" ' end
-  end
-
-  if opts.query then
-    cmd = cmd .. '-q"' .. opts.query .. '" '
-  end
-
-  run(table.concat({
-    cmd,
-    "--columns ", opts.columns or defaults.columns,
-    "--order-by ", opts.order or defaults.order,
-    "--paginate ", opts.paginate or defaults.paginate,
-    opts.args or ''
-  }, " "))
+  run(cli_arguments('issue list', opts))
 end
 
 M.epics = function(opts)
@@ -87,39 +105,28 @@ M.epics = function(opts)
 end
 
 M.sprints = function(opts)
-  local cmd = "sprint list "
-
-  if opts.types then
-    for _, t in ipairs(opts.types) do cmd = cmd .. "-t" .. t .. " " end
-  end
-
-  if opts.statuses then
-    for _, status in ipairs(opts.statuses) do cmd = cmd .. '-s"' .. status .. '" ' end
-  end
-
-  if opts.query then
-    cmd = cmd .. '-q"' .. opts.query .. '" '
-  end
-
-  cmd = table.concat({
-    cmd,
-    "--columns ", opts.columns or defaults.columns,
-    "--order-by ", opts.order or defaults.order,
-    "--paginate ", opts.paginate or defaults.paginate,
-    opts.args or ''
-  }, " ")
-
+  local args = cli_arguments('sprint list', opts)
   if opts.plain then
-    cmd = "jira " .. cmd .. " --plain"
-    local output = io.popen(cmd):read("*a")
+    local output = io.popen("jira " .. args):read("*a")
     return parse_results(output)
   else
-    run(cmd, { direction = 'horizontal' })
+    run(args, { direction = 'horizontal' })
   end
 end
 
 M.open_browser = function()
   run("open")
+end
+
+-- Helper to export issues
+M.plain = function(subcommand, opts)
+  opts = opts or {}
+  opts.columns = plain.columns
+  opts.plain = true
+
+  local args = cli_arguments(subcommand, opts)
+  local output = io.popen("jira " .. args):read("*a")
+  return parse_results(output)
 end
 
 return M

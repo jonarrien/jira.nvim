@@ -1,6 +1,8 @@
 local terminal = require('toggleterm.terminal').Terminal
 
-return function(command, opts)
+local M = {}
+
+M.interactive = function(command, opts)
   opts = opts or {}
   local term = terminal:new({
     cmd = "jira " .. command,
@@ -10,3 +12,5 @@ return function(command, opts)
   term:toggle()
   term:resize(40)
 end
+
+return M

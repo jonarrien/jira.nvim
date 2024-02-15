@@ -1,4 +1,5 @@
 local api  = require('jira.api')
+local config = require('jira.config')
 
 local cmds = {
   epic  = {
@@ -58,7 +59,7 @@ vim.api.nvim_create_user_command("JiraNew", function()
   api.create()
 end, {})
 
-for _, issue_type in ipairs({ 'Epic', 'Feature', 'Story', 'Bug', 'Task' }) do
+for _, issue_type in ipairs(config.issue_types) do
   vim.api.nvim_create_user_command("JiraNew" .. issue_type, function(params)
     api.create(issue_type, params.args)
   end, {})
@@ -66,7 +67,7 @@ end
 
 -- ISSUES
 
-for _, status in ipairs({ 'Open', 'To Do', 'Waiting', 'In Progress', 'In Review', 'Done', 'Cancelled' }) do
+for _, status in ipairs(config.statuses) do
   local shortened = status:gsub("%s+", "")
   vim.api.nvim_create_user_command("JiraIssue" .. shortened, function()
     api.list_issues({ statuses = { status } })
