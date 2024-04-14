@@ -12,7 +12,15 @@ M.setup = function()
     return
   end
 
-  require('jira.commands')
+  require('jira.commands.browser')
+  require('jira.commands.edit')
+  require('jira.commands.epics')
+  require('jira.commands.generic')
+  require('jira.commands.list')
+  require('jira.commands.new')
+  require('jira.commands.sprints')
+  require('jira.commands.start')
+  require('jira.commands.view')
 end
 
 return M

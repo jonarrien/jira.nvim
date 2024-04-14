@@ -1,4 +1,15 @@
 return {
+  columns = "key,type,summary,priority,status,assignee,reporter,sprint,duedate,labels,description",
+  order = "priority,rank",
+  paginate = 50,
+  issue_types = {
+    'Epic',
+    'Feature',
+    'Story',
+    'Bug',
+    'Task',
+    'Support',
+  },
   statuses = {
     'Open',
     'To Do',
@@ -7,13 +18,6 @@ return {
     'In Review',
     'Done',
     'Cancelled'
-  },
-  issue_types = {
-    'Epic',
-    'Feature',
-    'Story',
-    'Bug',
-    'Task'
   },
 
   highlights = {

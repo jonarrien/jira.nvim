@@ -1,11 +1,5 @@
 local run = require('jira.run').interactive
-
-local defaults = {
-  columns = "key,type,summary,priority,status,assignee,reporter,sprint,duedate,labels,description",
-  order = "priority,rank",
-  paginate = 50,
-  issue_types = { 'Epic', 'Story', 'Task', 'Bug', 'Support' },
-}
+local config = require('jira.config')
 
 local plain = {
   columns = "key,priority,type,summary,labels,status"
@@ -56,9 +50,9 @@ local cli_arguments = function(cmd, opts)
 
   return string.format("%s --columns %s --order-by %s --paginate %s %s",
     cmd,
-    opts.columns or defaults.columns,
-    opts.order or defaults.order,
-    opts.paginate or defaults.paginate,
+    opts.columns or config.columns,
+    opts.order or config.order,
+    opts.paginate or config.paginate,
     opts.args or ''
   )
 end
@@ -98,7 +92,7 @@ M.epics = function(opts)
 
   cmd = table.concat({
     cmd,
-    "--order-by ", opts.order or defaults.order,
+    "--order-by ", opts.order or config.order,
     opts.args or ''
   }, " ")
   run(cmd, { direction = 'horizontal' })
